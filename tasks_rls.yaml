@@ -97,31 +97,12 @@ tasks:
     cmds:
     - 'echo -n "{{.VERSION}}" > "{{.ROOT_DIR2}}/VERSION"'
     - for:
-        var: COMPONENTS
-      vars:
-        COMPONENT: '{{.ITEM}}'
-        VERSION: '{{.VERSION}}'
-      task: set-chart-version-internal
-    - for:
         var: NESTED_MODULES
       vars:
         MODULE: '{{.ITEM}}'
         VERSION: '{{.VERSION}}'
         MODULE_NAME: '{{.MODULE_NAME}}'
       task: set-module-version-internal
-
-  set-chart-version-internal:
-    desc: "  Sets the versions in the helm chart for a specific component."
-    run: always
-    requires:
-      vars:
-      - VERSION
-      - COMPONENT
-    cmds:
-    - '{{.TASKFILE_DIR2}}/sed.sh -E "s@version: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@version: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
-    - '{{.TASKFILE_DIR2}}/sed.sh -E "s@appVersion: v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*@appVersion: {{.VERSION}}@1" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/Chart.yaml"'
-    - '{{.TASKFILE_DIR2}}/sed.sh -E "s@  tag: .*@  tag: {{.VERSION}}@" "{{.ROOT_DIR2}}/charts/{{.COMPONENT}}/values.yaml"'
-    internal: true
 
   set-module-version-internal:
     desc: "  Sets the imported version of a nested module in the root go.mod file."

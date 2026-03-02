@@ -33,27 +33,6 @@ tasks:
     cmds:
     - 'PROJECT_ROOT="{{.ROOT_DIR2}}" NESTED_MODULES="{{.NESTED_MODULES}}" KUBEBUILDER_ASSETS="$( (test -f {{.LOCALBIN}}/assets_path && cat {{.LOCALBIN}}/assets_path) || echo "")" ENVTEST_K8S_VERSION="{{.ENVTEST_K8S_VERSION}}" {{.TASKFILE_DIR2}}/run-tests.sh {{.CODE_DIRS}}'
 
-  test-envtest-dep:
-    desc: "  Install the envtest dependency, if marked as required."
-    run: once
-    status:
-    - '[ "{{.ENVTEST_REQUIRED | default "false"}}" != "true" ]'
-    cmds:
-    - task: tools:envtest
-    internal: true
-
-  validate:
-    desc: "  Combines all validation tasks except for tests."
-    run: once
-    aliases:
-    - verify
-    - check
-    cmds:
-    - task: vet
-    - task: lint
-    - task: format-imports
-    - task: docs
-
   docs:
     desc: "  Checks if the documentation index is up-to-date."
     run: once

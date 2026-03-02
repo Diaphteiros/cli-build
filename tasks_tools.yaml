@@ -27,24 +27,6 @@ tasks:
     - mkdir -p {{.LOCALTMP}}
     internal: true
 
-  controller-gen:
-    desc: "  Ensure that controller-gen is installed."
-    run: once
-    requires:
-      vars:
-      - CONTROLLER_GEN
-    deps:
-    - localbin
-    vars:
-      # renovate: datasource=github-releases depName=controller-tools packageName=kubernetes-sigs/controller-tools
-      CONTROLLER_GEN_VERSION: '{{ env "CONTROLLER_GEN_VERSION" | default ( .CONTROLLER_GEN_VERSION | default "v0.20.1" ) }}'
-    status:
-    - test -x {{.CONTROLLER_GEN}}
-    - '{{.CONTROLLER_GEN}} --version | grep -q "{{.CONTROLLER_GEN_VERSION}}"'
-    cmds:
-    - 'GOBIN="{{.LOCALBIN}}" go install sigs.k8s.io/controller-tools/cmd/controller-gen@{{.CONTROLLER_GEN_VERSION}}'
-    internal: true
-
   goimports:
     desc: "  Ensure that goimports is installed."
     run: once
@@ -104,31 +86,6 @@ tasks:
     - 'chmod +x "{{.JQ}}"'
     internal: true
 
-  helm:
-    desc: "  Ensure that helm is installed."
-    run: once
-    requires:
-      vars:
-      - HELM
-    deps:
-    - localbin
-    vars:
-      # renovate: datasource=github-releases depName=helm packageName=helm/helm
-      HELM_VERSION: '{{ env "HELM_VERSION" | default ( .HELM_VERSION | default "v3.20.0" ) }}'
-      tmpdir:
-        sh: 'mktemp -d'
-    status:
-    - test -x "{{.HELM}}"
-    - '"{{.HELM}}" version --short | grep -q {{.HELM_VERSION}}'
-    cmds:
-    - 'mkdir -p {{.tmpdir}}/helm-unpacked'
-    - 'curl -sfL "https://get.helm.sh/helm-{{.HELM_VERSION}}-{{.OS}}-{{.ARCH}}.tar.gz" --output "{{.tmpdir}}/helm.tar.gz"'
-    - 'tar -xzf "{{.tmpdir}}/helm.tar.gz" --directory "{{.tmpdir}}/helm-unpacked"'
-    - 'mv "{{.tmpdir}}/helm-unpacked/{{.OS}}-{{.ARCH}}/helm" "{{.HELM}}"'
-    - 'chmod +x "{{.HELM}}"'
-    - 'rm -rf "{{.tmpdir}}"'
-    internal: true
-
   yaml2json:
     desc: "  Ensure that yaml2json is installed."
     run: once
@@ -146,46 +103,4 @@ tasks:
     cmds:
     - 'curl -sfL "https://github.com/bronze1man/yaml2json/releases/download/{{.YAML2JSON_VERSION}}/yaml2json_{{.OS}}_{{.ARCH}}" --output "{{.LOCALBIN}}/yaml2json"'
     - 'chmod +x "{{.YAML2JSON}}"'
-    internal: true
-
-  ocm:
-    desc: "  Ensure that the ocm CLI is installed."
-    run: once
-    requires:
-      vars:
-      - OCM
-    deps:
-    - localbin
-    status:
-    - 'test -x "{{.OCM}}"'
-    - '"{{.OCM}}" --version | grep -q "{{.OCM_VERSION | trimPrefix "v"}}"'
-    vars:
-      # renovate: datasource=github-releases depName=ocm packageName=open-component-model/ocm
-      OCM_VERSION: '{{ env "OCM_VERSION" | default ( .OCM_VERSION | default "v0.35.0" ) }}'
-      tmpdir:
-        sh: 'mktemp -d'
-    cmds:
-    - 'curl -sSfL https://ocm.software/install.sh | OCM_VERSION="{{.OCM_VERSION | trimPrefix "v"}}" bash -s "{{.tmpdir}}"'
-    - 'mv "{{.tmpdir}}/ocm" "{{.OCM}}"'
-    internal: true
-
-  envtest:
-    desc: "  Ensure that envtest is installed."
-    run: once
-    requires:
-      vars:
-      - ENVTEST
-    deps:
-    - localbin
-    vars:
-      ENVTEST_VERSION: '{{ env "ENVTEST_VERSION" | default ( .ENVTEST_VERSION | default "release-0.23" ) }}'
-      ENVTEST_K8S_VERSION: '{{ env "ENVTEST_K8S_VERSION" | default ( .ENVTEST_K8S_VERSION | default "1.30.0" ) }}'
-    status:
-    - 'test -x "{{.ENVTEST}}"'
-    - test -f {{.LOCALBIN}}/envtest_version
-    - 'cat {{.LOCALBIN}}/envtest_version | grep -q "{{.ENVTEST_VERSION}}"'
-    cmds:
-    - 'GOBIN="{{.LOCALBIN}}" go install sigs.k8s.io/controller-runtime/tools/setup-envtest@{{.ENVTEST_VERSION}}'
-    - echo -n "{{.ENVTEST_VERSION}}" > {{.LOCALBIN}}/envtest_version
-    - '{{.ROOT_DIR}}/bin/setup-envtest use {{.ENVTEST_K8S_VERSION}} -p path > {{.LOCALBIN}}/assets_path'
     internal: true

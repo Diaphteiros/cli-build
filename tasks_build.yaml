@@ -1,14 +1,12 @@
 version: 3
 
 includes:
-  bin:
-    taskfile: tasks_build_bin.yaml
-  img:
-    taskfile: tasks_build_img.yaml
-  helm:
-    taskfile: tasks_build_helm.yaml
-  ocm:
-    taskfile: tasks_build_ocm.yaml
+  gen:
+    taskfile: tasks_gen.yaml
+    internal: true
+  val:
+    taskfile: tasks_val.yaml
+    internal: true
 
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
@@ -18,10 +16,79 @@ tasks:
     - cmd: echo "{{.SEP_MSG}}"
       silent: true
 
-  all:
-    desc: "  Builds binaries and images, packages helm charts, builds the OCM component, and pushes everything into the respective registries."
-    run: once
+  bin:
+    desc: '  Build the binary for $OS/$ARCH.'
+    summary: |
+      This task builds the binary for the current operating system and architecture.
+      To overwrite this, set the 'OS' and 'ARCH' environment variables.
+      The binary is saved in the 'bin' folder, as $COMPONENT.$OS-$ARCH.
+    requires:
+      vars:
+      - COMPONENTS
+      - OS
+      - ARCH
+    deps:
+    - gen:tidy
     cmds:
-    - task: img:all
-    - task: helm:all
-    - task: ocm:all
+    - task: gen:generate # don't use deps, since they are executed in parallel
+    - task: val:validate # and we want the code generation
+    - task: val:test # to be executed before the validation.
+    - task: build-raw
+      vars:
+        OS: '{{.OS}}'
+        ARCH: '{{.ARCH}}'
+
+  bin-raw:
+    desc: "  Build the binary. Opposed to the regular build, this one just builds and skips code generation/validation tasks."
+    summary: |
+      This task builds the binary for the current operating system and architecture.
+      To overwrite this, set the 'OS' and 'ARCH' environment variables.
+      The binary is saved in the 'bin' folder, as $COMPONENT.$OS-$ARCH.
+    requires:
+      vars:
+      - COMPONENTS
+      - OS
+      - ARCH
+      - VERSION
+      - GIT_TREE_STATE
+      - GIT_COMMIT
+      - BUILD_DATE
+      - MODULE_NAME
+    cmds:
+    - for:
+        var: COMPONENTS
+        as: COMPONENT
+      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -ldflags="-X {{.MODULE_NAME}}/internal/version.buildVersion={{.VERSION}} -X {{.MODULE_NAME}}/internal/version.gitTreeState={{.GIT_TREE_STATE}} -X {{.MODULE_NAME}}/internal/version.gitCommit={{.GIT_COMMIT}} -X {{.MODULE_NAME}}/internal/version.buildDate={{.BUILD_DATE}}" -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
+
+  bin-multi-raw:
+    desc: "  Build multi-platform binaries. Skips code generation/validation tasks."
+    requires:
+      vars:
+      - COMPONENTS
+    cmds:
+    - for:
+        matrix:
+          OS: [linux, darwin]
+          ARCH: [amd64, arm64]
+      vars:
+        OS: '{{.ITEM.OS}}'
+        ARCH: '{{.ITEM.ARCH}}'
+      task: bin-raw
+
+  all:
+    desc: "  Build multi-platform binaries."
+    aliases:
+    - bin-multi
+    requires:
+      vars:
+      - COMPONENTS
+    cmds:
+    - for:
+        matrix:
+          OS: [linux, darwin]
+          ARCH: [amd64, arm64]
+      vars:
+        OS: '{{.ITEM.OS}}'
+        ARCH: '{{.ITEM.ARCH}}'
+      task: bin
+

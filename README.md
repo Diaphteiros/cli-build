@@ -1,19 +1,12 @@
-[![REUSE status](https://api.reuse.software/badge/github.com/openmcp-project/build)](https://api.reuse.software/info/github.com/openmcp-project/build)
-
-# Open Managed Control Planes Build and CI Scripts
+# CLI Build Tooling
 
 ## About this project
 
-OpenMCP build and CI scripts
-
-The Kubernetes operators in the openmcp-project use mostly the same `make` targets and surrounding scripts. This makes sense, because this way developers do not have to think about in which repo they are working right now - `make tidy` will always tidy the go modules.
-The drawback is that all `make` targets and scripts have to be kept in sync. If the `make` targets have the same name but a different behavior (conceptually, not code-wise), this will became more of an disadvantage than an advantage. This 'keeping it in sync' means that adding an improvement to any of the scripts required this improvement to be added to all of the script's copies in the different repositories, which is annoying and error-prone.
-
-To improve this, the scripts that are shared between the different repositories have been moved into this repository, which is intended to be used as a git submodule in the actual operator repositories.
-
-Instead of `make`, we have decided to use the [task](https://taskfile.dev/) tool.
+This is a fork of https://github.com/openmcp-project/build with the main purpose of adapting it to be used for CLI tools (opposed to the original project's focus on k8s controllers).
 
 ## Requirements
+
+[task](https://taskfile.dev/) is used instead of `make`.
 
 It is strongly recommended to include this submodule under the `hack/common` path in the operator repositories. While most of the coding is designed to work from anywhere within the including repository, there are some workarounds for bugs in `task` which rely on the assumption that this repo is a submodule under `hack/common` in the including repository.
 
@@ -21,7 +14,7 @@ It is strongly recommended to include this submodule under the `hack/common` pat
 
 To use this repository, first check it out via
 ```shell
-git submodule add https://github.com/openmcp-project/build.git hack/common
+git submodule add https://github.com/Diaphteiros/cli-build.git hack/common
 ```
 and ensure that it is checked-out via
 ```shell
@@ -178,17 +171,6 @@ Markdown files whose name is not overwritten by a corresponding field in the met
 #### Limitations
 
 The script is rather primitive and can only handle a single hierarchy level, nested folder structures are not supported. Manipulating or configuring the generated index apart from adapting the names is also not possible.
-
-## Support, Feedback, Contributing
-
-This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/openmcp-project/build/issues). Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
-
-## Security / Disclosure
-If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/openmcp-project/build/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
-
-## Code of Conduct
-
-We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone. By participating in this project, you agree to abide by its [Code of Conduct](https://github.com/openmcp-project/.github/blob/main/CODE_OF_CONDUCT.md) at all times.
 
 ## Licensing
 
