@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 
 set -euo pipefail
 source "$(realpath "$(dirname $0)/environment.sh")"
@@ -8,7 +8,9 @@ if [[ -n "${VERSION_OVERRIDE:-}" ]]; then
   exit 0
 fi
 
-VERSION="$(cat "${PROJECT_ROOT}/VERSION")"
+VERSION=$(cat "$PROJECT_ROOT/pkg/version/static_version.go" | grep "StaticVersion = ")
+VERSION=${VERSION#*'"'}
+VERSION=${VERSION%'"'*}
 
 (
   cd "$PROJECT_ROOT"

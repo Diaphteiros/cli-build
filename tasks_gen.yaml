@@ -42,6 +42,7 @@ tasks:
     - generate
     cmds:
     - task: tidy
+    - task: command-reference
     - task: docs
     - task: format
 
@@ -98,7 +99,7 @@ tasks:
       code_dirs:
         sh: '{{.TASKFILE_DIR2}}/unfold.sh --clean --no-unfold --inline {{.CODE_DIRS}}' # goimports doesn't like the '/...' syntax
     cmds:
-    - '{{.FORMATTER}} -l -w -local={{.MODULE_NAME}} {{.code_dirs}}'
+    - '{{.FORMATTER}} -l -w -local={{.MODULE_NAME}}  "{{.ROOT_DIR2}}/main.go" {{.code_dirs}}'
 
   format:
     desc: "  Combines all formatting tasks."
@@ -106,3 +107,17 @@ tasks:
     cmds:
     - task: fmt
     - task: format-imports
+
+  command-reference:
+    desc: "  Generate the command reference documentation."
+    aliases:
+    - cmdref
+    run: once
+    requires:
+      vars:
+      - REFERENCE_GENERATOR
+    vars:
+      REFERENCE_GENERATOR: '{{ .REFERENCE_GENERATOR }}'
+    if: '{{ ne .REFERENCE_GENERATOR "" }}'
+    cmds:
+    - 'go run "{{.REFERENCE_GENERATOR}}" "{{.ROOT_DIR2}}/docs/reference"'

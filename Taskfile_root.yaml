@@ -7,6 +7,11 @@ run: once
 method: checksum
 
 includes:
+  build:
+    taskfile: tasks_build.yaml
+    aliases:
+    - bld
+    - b
   generate:
     taskfile: tasks_gen.yaml
     aliases:
@@ -34,12 +39,6 @@ vars:
 
   VERSION:
     sh: 'PROJECT_ROOT="{{.ROOT_DIR2}}" {{.TASKFILE_DIR2}}/get-version.sh'
-  GIT_TREE_STATE:
-    sh: 'git diff --quiet && echo "clean" || echo "dirty"'
-  GIT_COMMIT:
-    sh: 'git rev-parse --verify HEAD || echo "unknown"'
-  BUILD_DATE:
-    sh: 'date -u +%Y-%m-%dT%H:%M:%SZ || echo "unknown"'
   OS:
     sh: echo ${OS:-$(go env GOOS)}
   ARCH:
@@ -48,17 +47,17 @@ vars:
     sh: 'cat "{{.ROOT_DIR2}}/go.mod" | grep "module " | sed "s/module //" | sed -E "s/[[:blank:]].*//"'
   NESTED_MODULES: '{{.NESTED_MODULES | default "" }}'
 
+  REFERENCE_GENERATOR: '{{ .REFERENCE_GENERATOR | default (print .ROOT_DIR2 "/hack/cmdref/main.go") }}'
   LOCALBIN: '{{ env "LOCALBIN" | default ( .LOCALBIN | default (print .ROOT_DIR2 "/bin") ) }}'
   LOCALTMP: '{{ env "LOCALTMP" | default ( .LOCALTMP | default (print .ROOT_DIR2 "/tmp") ) }}'
   FORMATTER: '{{ .FORMATTER | default (print .LOCALBIN "/goimports") }}'
   LINTER: '{{ .LINTER | default (print .LOCALBIN "/golangci-lint") }}'
   JQ: '{{ .JQ | default (print .LOCALBIN "/jq") }}'
-  YAML2JSON: '{{ .YAML2JSON | default (print .LOCALBIN "/yaml2json") }}'
 
   # separator strings
   SEP_MSG: "This is just a separator, what did you expect to happen?"
   MAIN_SEP:    "MAIN ###########################################################################"
-  GEN_SEP:     "CODE GENERATION ### generate / gen / g #########################################"
+  GEN_SEP:     "CODE AND DOCS GENERATION ### generate / gen / g ################################"
   VAL_SEP:     "CODE VALIDATION ### validate / val / v #########################################"
   BLD_SEP:     "BUILD ARTIFACTS ### build / bld / b ############################################"
   RLS_SEP:     "RELEASE MANAGEMENT ### release / rls / r #######################################"
@@ -82,6 +81,12 @@ tasks:
     cmds:
     - cmd: task -l
       silent: true # for some reason, this is not needed here, but let's keep it for consistency
+
+  install:
+    desc: "  Install the CLI tool."
+    run: once
+    cmds:
+    - 'CGO_ENABLED=0 go install -ldflags "-X {{.MODULE_NAME}}/pkg/version.StaticVersion={{.VERSION}}" "{{.ROOT_DIR2}}"'
 
   build:
     desc: "  Build the binaries. Includes validation."

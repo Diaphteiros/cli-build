@@ -24,16 +24,15 @@ tasks:
       The binary is saved in the 'bin' folder, as $COMPONENT.$OS-$ARCH.
     requires:
       vars:
-      - COMPONENTS
+      - NAME
       - OS
       - ARCH
     deps:
     - gen:tidy
     cmds:
-    - task: gen:generate # don't use deps, since they are executed in parallel
-    - task: val:validate # and we want the code generation
-    - task: val:test # to be executed before the validation.
-    - task: build-raw
+    - task: gen:all # don't use deps, since they are executed in parallel
+    - task: val:all # and we want the code generation to be executed before the validation.
+    - task: bin-raw
       vars:
         OS: '{{.OS}}'
         ARCH: '{{.ARCH}}'
@@ -46,25 +45,19 @@ tasks:
       The binary is saved in the 'bin' folder, as $COMPONENT.$OS-$ARCH.
     requires:
       vars:
-      - COMPONENTS
+      - NAME
       - OS
       - ARCH
       - VERSION
-      - GIT_TREE_STATE
-      - GIT_COMMIT
-      - BUILD_DATE
       - MODULE_NAME
     cmds:
-    - for:
-        var: COMPONENTS
-        as: COMPONENT
-      cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -ldflags="-X {{.MODULE_NAME}}/internal/version.buildVersion={{.VERSION}} -X {{.MODULE_NAME}}/internal/version.gitTreeState={{.GIT_TREE_STATE}} -X {{.MODULE_NAME}}/internal/version.gitCommit={{.GIT_COMMIT}} -X {{.MODULE_NAME}}/internal/version.buildDate={{.BUILD_DATE}}" -o {{.ROOT_DIR2}}/bin/{{.COMPONENT}}.{{.OS}}-{{.ARCH}} {{.ROOT_DIR2}}/cmd/{{.COMPONENT}}/main.go'
+    - cmd: 'CGO_ENABLED=0 GOOS={{.OS}} GOARCH={{.ARCH}} go build -a -ldflags "-X {{.MODULE_NAME}}/pkg/version.StaticVersion={{.VERSION}}" -o {{.ROOT_DIR2}}/bin/{{.NAME}}.{{.OS}}-{{.ARCH}} {{.ROOT_DIR2}}'
 
   bin-multi-raw:
     desc: "  Build multi-platform binaries. Skips code generation/validation tasks."
     requires:
       vars:
-      - COMPONENTS
+      - NAME
     cmds:
     - for:
         matrix:
@@ -81,7 +74,7 @@ tasks:
     - bin-multi
     requires:
       vars:
-      - COMPONENTS
+      - NAME
     cmds:
     - for:
         matrix:

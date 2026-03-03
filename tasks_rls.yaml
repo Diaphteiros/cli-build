@@ -50,8 +50,7 @@ tasks:
     vars:
       changes:
         sh: '( cd "{{.ROOT_DIR2}}"; git status --short )'
-    status:
-    - 'test -z "$( cd "{{.ROOT_DIR2}}" && git status --porcelain=v1)"'
+    if: 'test -n "$( cd "{{.ROOT_DIR2}}" && git status --porcelain=v1)"'
     prompt:
     - 'There are uncommitted changes in the working directory:{{"\n"}}{{.changes}}{{"\n\n"}}These changes will be included in the release commit, unless you stash, commit, or remove them otherwise before. Do you want to continue?'
     internal: true
@@ -80,10 +79,7 @@ tasks:
     summary: |
       This task is called by the release tasks automatically.
       It sets the following versions to the one provided as argument:
-      - the VERSION file in the root directory
-      - 'version' in the Chart.yaml file of each component's helm chart
-      - 'appVersion' in the Chart.yaml file of each component's helm chart
-      - 'tag' in the values.yaml file of each component's helm chart
+      - the global CLI version in pkg/version/static_version.go
       - the imported version of each nested module in the root go.mod file
     run: once
     requires:
@@ -95,7 +91,7 @@ tasks:
     vars:
       VERSION: '{{.CLI_ARGS | splitList " " | first}}'
     cmds:
-    - 'echo -n "{{.VERSION}}" > "{{.ROOT_DIR2}}/VERSION"'
+    - '{{.TASKFILE_DIR2}}/set-root-version.sh "{{.VERSION}}"'
     - for:
         var: NESTED_MODULES
       vars:

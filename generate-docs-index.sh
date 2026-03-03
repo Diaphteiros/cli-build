@@ -38,8 +38,9 @@ function getDocName() {
     fi
   fi
   if [[ -f "$filename" ]]; then
-    local firstheader=$(grep -m1 -E '^# (.*)$' "$filename")
-    echo "${firstheader#'# '}"
+    local firstheader=$(grep -m1 -E '^##? (.*)$' "$filename")
+    firstheader=${firstheader#* }
+    echo "${firstheader#' '}"
   fi
 }
 

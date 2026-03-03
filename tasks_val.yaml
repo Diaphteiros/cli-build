@@ -20,24 +20,31 @@ tasks:
     - task: validate
     - task: test
 
+  validate:
+    desc: "  Combines all validation tasks except for tests."
+    run: once
+    aliases:
+    - verify
+    - check
+    cmds:
+    - task: vet
+    - task: lint
+    - task: format-imports
+    - task: docs
+
   test:
     desc: "  Run all tests."
     run: once
-    vars:
-      ENVTEST_K8S_VERSION: '{{ env "ENVTEST_K8S_VERSION" | default ( .ENVTEST_K8S_VERSION | default "1.30.0" ) }}'
     requires:
       vars:
       - CODE_DIRS
-    deps:
-    - test-envtest-dep
     cmds:
-    - 'PROJECT_ROOT="{{.ROOT_DIR2}}" NESTED_MODULES="{{.NESTED_MODULES}}" KUBEBUILDER_ASSETS="$( (test -f {{.LOCALBIN}}/assets_path && cat {{.LOCALBIN}}/assets_path) || echo "")" ENVTEST_K8S_VERSION="{{.ENVTEST_K8S_VERSION}}" {{.TASKFILE_DIR2}}/run-tests.sh {{.CODE_DIRS}}'
+    - 'PROJECT_ROOT="{{.ROOT_DIR2}}" NESTED_MODULES="{{.NESTED_MODULES}}" {{.TASKFILE_DIR2}}/run-tests.sh {{.CODE_DIRS}}'
 
   docs:
     desc: "  Checks if the documentation index is up-to-date."
     run: once
-    status:
-    - '[ "{{.GENERATE_DOCS_INDEX | default "false"}}" == "false" ]'
+    if: '[ "{{.GENERATE_DOCS_INDEX | default "false"}}" != "false" ]'
     cmds:
     - task: docs-internal
 
@@ -82,6 +89,9 @@ tasks:
       vars:
       - LINTER
     cmds:
+    - cmd: 'echo "> Linting main.go ..."'
+      silent: true
+    - '"{{.LINTER}}" run -c "{{.ROOT_DIR2}}/.golangci.yaml" "{{.ROOT_DIR2}}/main.go"'
     - 'PROJECT_ROOT="{{.ROOT_DIR2}}" NESTED_MODULES="{{.NESTED_MODULES}}" LINTER="{{.LINTER}}" {{.TASKFILE_DIR2}}/run-lint.sh {{.CODE_DIRS}}'
 
   format-imports:
@@ -97,4 +107,4 @@ tasks:
       code_dirs:
         sh: '{{.TASKFILE_DIR2}}/unfold.sh --clean --no-unfold --inline {{.CODE_DIRS}}' # goimports doesn't like the '/...' syntax
     cmds:
-    - 'tmp=$({{.FORMATTER}} -l -local={{.MODULE_NAME}} {{.code_dirs}}); if [[ "$tmp" ]]; then echo "Unformatted files detected:"; echo "$tmp"; exit 1; fi'
+    - 'tmp=$({{.FORMATTER}} -l -local={{.MODULE_NAME}} "{{.ROOT_DIR2}}/main.go" {{.code_dirs}}); if [[ "$tmp" ]]; then echo "Unformatted files detected:"; echo "$tmp"; exit 1; fi'
