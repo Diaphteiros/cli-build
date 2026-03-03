@@ -12,18 +12,9 @@ jobs:
     name: Release version
     runs-on: ubuntu-24.04
     steps:
-      - name: Create GitHub App token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
-        id: app-token
-        with:
-          # required
-          app-id: 1312871
-          private-key: ${{ secrets.OPENMCP_CI_APP_PRIVATE_KEY }}
-
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          token: ${{ steps.app-token.outputs.token }}
           fetch-tags: true
           fetch-depth: 0
           submodules: recursive
@@ -92,7 +83,12 @@ jobs:
             git push origin "${MODULE}/${{ env.version }}"
           done
 
+      - name: Generate release artifacts
+        if: ${{ env.SKIP != 'true' }}
+        run: task r:artifacts --verbose  
+
       - name: Build Changelog
+        if: ${{ env.SKIP != 'true' }}
         id: github_release  
         run: task r:generate-changelog
         env:
@@ -107,6 +103,7 @@ jobs:
           body_path: ./CHANGELOG.md
           draft: true
           prerelease: false
+          files: ./bin/release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -116,6 +113,6 @@ jobs:
           task release:set-version --verbose -- "${{ env.version }}-dev"
           git config user.name "${{ env.AUTHOR_NAME }}"
           git config user.email "${{ env.AUTHOR_EMAIL }}"
-          git add VERSION
-          git commit -m "chore(release): Update VERSION to ${{ env.version }}-dev"
+          git add pkg/version
+          git commit -m "chore(release): Update version to ${{ env.version }}-dev"
           git push origin main

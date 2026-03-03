@@ -169,5 +169,5 @@ tasks:
             ref: .ALL_OS
           ARCH:
             ref: .ALL_ARCH
-      cmd: 'tar -czf {{.ROOT_DIR2}}/bin/release/{{.NAME}}-{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}.tar.gz -C {{.ROOT_DIR2}}/bin {{.NAME}}.{{.ITEM.OS}}-{{.ITEM.ARCH}}'
+      cmd: 'rm -f "{{.ROOT_DIR2}}/bin/{{.NAME}}" && mv "{{.ROOT_DIR2}}/bin/{{.NAME}}.{{.ITEM.OS}}-{{.ITEM.ARCH}}" "{{.ROOT_DIR2}}/bin/{{.NAME}}" && tar -czf "{{.ROOT_DIR2}}/bin/release/{{.NAME}}-{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}.tar.gz" -C "{{.ROOT_DIR2}}/bin" {{.NAME}}'
 

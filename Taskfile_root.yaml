@@ -120,7 +120,7 @@ tasks:
     - verify
     - check
     deps:
-    - validate:all
+    - validate:validate
   
   version:
     desc: "  Print the version of the project. Use VERSION_OVERRIDE to make this task print a specific version."
