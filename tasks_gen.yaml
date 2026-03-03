@@ -120,4 +120,5 @@ tasks:
       REFERENCE_GENERATOR: '{{ .REFERENCE_GENERATOR }}'
     if: '{{ ne .REFERENCE_GENERATOR "" }}'
     cmds:
+    - 'rm -f "{{.ROOT_DIR2}}/docs/reference/"*.md'
     - 'go run "{{.REFERENCE_GENERATOR}}" "{{.ROOT_DIR2}}/docs/reference"'

@@ -1,5 +1,10 @@
 version: 3
 
+includes:
+  build:
+    taskfile: tasks_build.yaml
+    internal: true
+
 tasks:
   # This is a dummy task that serves as a separator between task namespaces in the 'task -l' output.
   "---":
@@ -146,3 +151,23 @@ tasks:
       - VERSION
     cmds:
     -  'VERSION={{.VERSION}} {{.TASKFILE_DIR2}}/generate-changelog.sh'
+
+  artifacts:
+    desc: "  Creates the artifacts to be attached to a github release. Basically tar archives of the built binaries for each platform. Outputs them to bin/release."
+    run: once
+    requires:
+      vars:
+      - NAME
+      - VERSION
+    deps:
+    - build:bin-multi-raw
+    cmds:
+    - 'rm -rf {{.ROOT_DIR2}}/bin/release && mkdir -p {{.ROOT_DIR2}}/bin/release'
+    - for:
+        matrix:
+          OS:
+            ref: .ALL_OS
+          ARCH:
+            ref: .ALL_ARCH
+      cmd: 'tar -czf {{.ROOT_DIR2}}/bin/release/{{.NAME}}-{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}.tar.gz -C {{.ROOT_DIR2}}/bin {{.NAME}}.{{.ITEM.OS}}-{{.ITEM.ARCH}}'
+

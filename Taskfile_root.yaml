@@ -47,6 +47,9 @@ vars:
     sh: 'cat "{{.ROOT_DIR2}}/go.mod" | grep "module " | sed "s/module //" | sed -E "s/[[:blank:]].*//"'
   NESTED_MODULES: '{{.NESTED_MODULES | default "" }}'
 
+  ALL_OS: [linux, darwin]
+  ALL_ARCH: [amd64, arm64]
+
   REFERENCE_GENERATOR: '{{ .REFERENCE_GENERATOR | default (print .ROOT_DIR2 "/hack/cmdref/main.go") }}'
   LOCALBIN: '{{ env "LOCALBIN" | default ( .LOCALBIN | default (print .ROOT_DIR2 "/bin") ) }}'
   LOCALTMP: '{{ env "LOCALTMP" | default ( .LOCALTMP | default (print .ROOT_DIR2 "/tmp") ) }}'

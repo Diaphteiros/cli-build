@@ -58,11 +58,15 @@ tasks:
     requires:
       vars:
       - NAME
+      - ALL_OS
+      - ALL_ARCH
     cmds:
     - for:
         matrix:
-          OS: [linux, darwin]
-          ARCH: [amd64, arm64]
+          OS:
+            ref: .ALL_OS
+          ARCH:
+            ref: .ALL_ARCH
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
@@ -78,8 +82,10 @@ tasks:
     cmds:
     - for:
         matrix:
-          OS: [linux, darwin]
-          ARCH: [amd64, arm64]
+          OS:
+            ref: .ALL_OS
+          ARCH:
+            ref: .ALL_ARCH
       vars:
         OS: '{{.ITEM.OS}}'
         ARCH: '{{.ITEM.ARCH}}'
