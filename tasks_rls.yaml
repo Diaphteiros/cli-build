@@ -177,7 +177,7 @@ tasks:
       - NAME
       - VERSION
     vars:
-      VERSION_NO_PREFIX: '{{.VERSION | replaceRE "^[vV]" ""}}'
+      VERSION_NO_PREFIX: '{{regexReplaceAll "^[vV]" .VERSION ""}}'
     deps:
     - build:bin-multi-raw
     cmds:
