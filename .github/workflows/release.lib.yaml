@@ -112,5 +112,5 @@ jobs:
         run: |
           git config user.name "${{ env.AUTHOR_NAME }}"
           git config user.email "${{ env.AUTHOR_EMAIL }}"
-          task release:post-release --verbose
+          task release:prepare-dev-cycle --verbose
           git push origin main
