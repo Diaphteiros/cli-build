@@ -49,6 +49,21 @@ tasks:
         RELEASE_VERSION:
           sh: 'VERSION={{.VERSION}} "{{.TASKFILE_DIR2}}/compute-next-release-version.sh" major'
 
+  prepare-dev-cycle:
+    desc: "  Prepares the repository for further development after a release. Creates a commit that adds a '-dev' suffix to the version and re-adds any commented-out 'replace' directives for nested modules in the root go.mod file. Meant to be run after a release commit has been pushed to the main branch."
+    run: once
+    requires:
+      vars:
+      - VERSION
+      - MODULE_NAME
+      - NESTED_MODULES
+    cmds:
+    - task: set-version
+      vars:
+        CLI_ARGS: '{{.VERSION}}-dev'
+    - task: readd-nested-module-replaces
+    - '( cd "{{.ROOT_DIR2}}"; git add pkg/version go.mod; git commit -m "chore(release): prepare for next development iteration (version {{.VERSION}}-dev)" )'
+
   prompt-changes:
     desc: "  Causes a prompt if there are uncommitted changes which would be included in the release commit."
     run: once
@@ -68,6 +83,8 @@ tasks:
     requires:
       vars:
       - RELEASE_VERSION
+      - MODULE_NAME
+      - NESTED_MODULES
     prompt:
     - 'The release version will be {{.RELEASE_VERSION}}. Do you want to continue?'
     cmds:
@@ -76,6 +93,7 @@ tasks:
     - vars:
         CLI_ARGS: '{{.RELEASE_VERSION}}'
       task: set-version
+    - task: remove-nested-module-replaces
     - '( cd "{{.ROOT_DIR2}}"; git add --all; git commit -m "feat: release {{.RELEASE_VERSION}}" )'
     internal: true
 
@@ -97,7 +115,8 @@ tasks:
       VERSION: '{{.CLI_ARGS | splitList " " | first}}'
     cmds:
     - '{{.TASKFILE_DIR2}}/set-root-version.sh "{{.VERSION}}"'
-    - for:
+    - if: '[[ ! "{{.VERSION}}" =~ .*-dev(-[0-9a-f]*)? ]]' # only set nested module versions for release versions (without '-dev' suffix)
+      for:
         var: NESTED_MODULES
       vars:
         MODULE: '{{.ITEM}}'
@@ -136,6 +155,32 @@ tasks:
       - MODULE_NAME
     cmds:
     - '{{.TASKFILE_DIR2}}/sed.sh -E "s@	{{.MODULE_NAME}}/{{.MODULE_DEPENDENCY}} v.*@	{{.MODULE_NAME}}/{{.MODULE_DEPENDENCY}} {{.VERSION}}@" "{{.ROOT_DIR2}}/{{.MODULE_TO_UPDATE}}/go.mod"'
+    internal: true
+
+  remove-nested-module-replaces:
+    desc: "  Removes any 'replace' directives for nested modules in the root go.mod file by commenting them out. Required for 'go install' to work."
+    run: once
+    requires:
+      vars:
+      - MODULE_NAME
+      - NESTED_MODULES
+    cmds:
+    - for:
+        var: NESTED_MODULES
+      cmd: '{{.TASKFILE_DIR2}}/sed.sh -E "s@replace {{.MODULE_NAME}}/{{.ITEM}} =>@// replace {{.MODULE_NAME}}/{{.ITEM}} =>@" "{{.ROOT_DIR2}}/{{.MODULE_TO_UPDATE}}/go.mod"'
+    internal: true
+
+  readd-nested-module-replaces:
+    desc: "  Re-adds any 'replace' directives for nested modules in the root go.mod file by uncommenting them."
+    run: once
+    requires:
+      vars:
+      - MODULE_NAME
+      - NESTED_MODULES
+    cmds:
+    - for:
+        var: NESTED_MODULES
+      cmd: '{{.TASKFILE_DIR2}}/sed.sh -E "s@// replace {{.MODULE_NAME}}/{{.ITEM}} =>@replace {{.MODULE_NAME}}/{{.ITEM}} =>@" "{{.ROOT_DIR2}}/{{.MODULE_TO_UPDATE}}/go.mod"'
     internal: true
 
   list-nested-modules:

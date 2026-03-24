@@ -107,12 +107,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push dev VERSION
+      - name: Prepare next development iteration
         if: ${{ env.SKIP != 'true' }}
         run: |
-          task release:set-version --verbose -- "${{ env.version }}-dev"
           git config user.name "${{ env.AUTHOR_NAME }}"
           git config user.email "${{ env.AUTHOR_EMAIL }}"
-          git add pkg/version
-          git commit -m "chore(release): Update version to ${{ env.version }}-dev"
+          task release:post-release --verbose
           git push origin main
