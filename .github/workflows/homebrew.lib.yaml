@@ -37,4 +37,4 @@ jobs:
           target_linux_amd64: true
           target_linux_arm64: true
 
-          update_readme_table: true
+          update_readme_table: false # temporarily disabled

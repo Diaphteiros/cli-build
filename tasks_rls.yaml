@@ -176,6 +176,8 @@ tasks:
       vars:
       - NAME
       - VERSION
+    vars:
+      VERSION_NO_PREFIX: '{{.VERSION | replaceRE "^[vV]" ""}}'
     deps:
     - build:bin-multi-raw
     cmds:
@@ -186,5 +188,5 @@ tasks:
             ref: .ALL_OS
           ARCH:
             ref: .ALL_ARCH
-      cmd: 'rm -f "{{.ROOT_DIR2}}/bin/{{.NAME}}" && mv "{{.ROOT_DIR2}}/bin/{{.NAME}}.{{.ITEM.OS}}-{{.ITEM.ARCH}}" "{{.ROOT_DIR2}}/bin/{{.NAME}}" && tar -czf "{{.ROOT_DIR2}}/bin/release/{{.NAME}}-{{.VERSION}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}.tar.gz" -C "{{.ROOT_DIR2}}/bin" {{.NAME}}'
+      cmd: 'rm -f "{{.ROOT_DIR2}}/bin/{{.NAME}}" && mv "{{.ROOT_DIR2}}/bin/{{.NAME}}.{{.ITEM.OS}}-{{.ITEM.ARCH}}" "{{.ROOT_DIR2}}/bin/{{.NAME}}" && tar -czf "{{.ROOT_DIR2}}/bin/release/{{.NAME}}-{{.VERSION_NO_PREFIX}}-{{.ITEM.OS}}-{{.ITEM.ARCH}}.tar.gz" -C "{{.ROOT_DIR2}}/bin" {{.NAME}}'
 
