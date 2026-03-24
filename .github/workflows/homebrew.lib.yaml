@@ -1,0 +1,40 @@
+name: Homebrew Releaser
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        description: 'GitHub username of the homebrew tap owner'
+        required: true
+        type: string
+      tap:
+        description: 'Name of the homebrew tap (must start with homebrew-)'
+        required: true
+        type: string
+      secret_name:
+        description: 'Name of the GitHub access token with repo permissions for the homebrew tap repository and the repository containing the project to be released'
+        required: true
+        type: string
+
+jobs:
+  homebrew-releaser:
+    runs-on: ubuntu-24.04
+    name: Update Homebrew Tap Formula
+    steps:
+      - name: Release project to Homebrew tap
+        uses: Justintime50/homebrew-releaser@v3
+        with:
+          homebrew_owner: ${{ inputs.username }}
+          homebrew_tap: ${{ inputs.tap }}
+
+          github_token: ${{ secrets[inputs.secret_name] }}
+
+          install: |
+            bin.install "${{ github.event.repository.name }}"
+
+          target_darwin_amd64: true
+          target_darwin_arm64: true
+          target_linux_amd64: true
+          target_linux_arm64: true
+
+          update_readme_table: true
